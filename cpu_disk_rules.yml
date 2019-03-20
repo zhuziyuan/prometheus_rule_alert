@@ -1,0 +1,41 @@
+groups:
+- name: CPU
+  rules:
+  - record: cpu_utilization
+    expr: 100 - avg by (env, job)(irate(node_cpu_seconds_total{mode="idle"}[10m]) * 100)
+  - alert: CPU Utilization
+    expr: cpu_utilization > 80
+    for: 5m
+    labels:
+      seversity: warning
+    annotations:
+      description: "CPU usage will exceed 75% after an hour"
+  - alert: Test with condition
+    expr: cpu_utilization{job="server_23"} > 20 and on() cpu_utilization{job="server_24"} > 20 and on() cpu_utilization{job="server_25"} > 20 
+    for: 5m 
+    labels:
+      seversity: warning
+    annotations:
+      description: "Test alert cpu utilization on multiple servers over 20% "
+
+- name: DISK
+  rules:
+  - record: disk_used
+    expr: 100 - ((node_filesystem_free_bytes{mountpoint="/",device!~'rootfs'} * 100) / node_filesystem_size_bytes{mountpoint="/",device!~'rootfs'})
+  - record: disk_io_utilisation
+    expr: irate(node_disk_io_time_seconds_total{device!~'^(md\\\\d+$|dm-)'}[5m])
+  - record: disk_iops
+    expr: rate(node_disk_reads_completed_total[5m]) + rate(node_disk_writes_completed_total[5m])
+  - record: disk_write_latency
+    expr: rate(node_disk_write_time_seconds_total[5m])/ rate(node_disk_writes_completed_total[5m])
+  - record: disk_read_latency
+    expr: rate(node_disk_read_time_seconds_total[5m])/ rate(node_disk_reads_completed_total[5m])
+  - record: disk_throughput
+    expr: irate(node_disk_read_bytes_total[5m]) + irate(node_disk_written_bytes_total[5m])
+  - alert: Disk Used
+    expr: predict_linear(disk_used[1h], 3600) > 90
+    for: 5m
+    labels:
+      seversity: warning
+    annotations:
+      description: "Disk space will full 90% after an hour"

@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 10s
+ 
+
+alerting:
+  alertmanagers:
+    - static_configs:
+      - targets: ['localhost:9093']
+
+rule_files:
+  - /etc/prometheus/cpu_disk_rules.yml
+  - /etc/prometheus/mem_fs.yml
+  - /etc/prometheus/process.yml
+  - /etc/prometheus/predict_alert.yml
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'server_23'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9100', 'localhost:8001']
+  - job_name: 'server_24'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['10.10.153.24:9100']
+ #   metric_relabel_configs:
+ #   - source_labels: [__name__]
+ #     regex: ^node_memory_MemFree_.+$
+ #     target_label: ft_target
+ #     replacement: true
+  - job_name: 'server_25'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['10.10.153.25:9100']
+  - job_name: 'iptable_server_25'
+    scrape_interval: 10s
+    metrics_path: '/'
+    static_configs:
+      - targets: ['10.10.153.25:9103']
+remote_write:
+  - url: "http://localhost:8086/api/v1/prom/write?db=prometheus"
+
+remote_read:
+  - url: "http://localhost:8086/api/v1/prom/read?db=prometheus"

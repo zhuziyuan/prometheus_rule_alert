@@ -1,0 +1,17 @@
+groups:
+ - name: predict
+   rules:
+   - alert: will_HighMemory_6Hour
+     expr: predict_linear(mem_used[45m], 6*3600) > 40 
+     for: 1m
+     labels:
+       serverity: warning
+     annotations:
+       summary: "Memory will high in next 6h"
+   - alert: will_high_storage_5Hour
+     expr: predict_linear(filesystem_used{device="/dev/sda3"}[3h], 5*3600) >= 20
+     for: 30s
+     labels:
+       serverity: warning
+     annotations:
+       summary: "high disk in next 5h"

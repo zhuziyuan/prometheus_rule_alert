@@ -1,0 +1,32 @@
+groups:
+  - name: mem
+    rules:
+    - record: mem_used
+      expr: 100 - ((node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes) / node_memory_MemTotal_bytes) * 100
+    - record: job:mem_used:holt_winter_1h
+      expr: holt_winters(mem_used[1h], 0.7, 0.3)
+    - record: job:mem_used:predict_1h
+      expr: predict_linear(mem_used[1d], 1*3600)                        
+    - alert: high_mem 
+      expr: 100 - ((node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes)/ node_memory_MemTotal_bytes )* 100 > 90 
+      for: 5m
+      labels:
+        serverity: warning
+      annotations:
+        summary: "Server memory almost full"
+    - alert: OOM_killer
+      expr: node_vmstat_oom_kill > 0 
+      for: 30s
+  - name: filesystem
+    rules:
+    - record: filesys_free
+      expr: (node_filesystem_free_bytes{mountpoint="/"}) / (node_filesystem_size_bytes{mountpoint="/"})
+    - record: filesystem_used
+      expr: 100 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100
+    - alert: high_storage
+      expr: 100 - node_filesystem_avail_bytes / node_filesystem_size_bytes* 100 > 90
+      for: 5m
+      labels:
+        serverity: warning
+      annotations:
+        summary: "Server storage is almost full"

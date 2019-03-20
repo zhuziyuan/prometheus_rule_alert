@@ -1,0 +1,24 @@
+groups:
+- name: PROCESS
+  rules:
+  - alert: Percents of Threads Used
+    expr: (node_processes_threads / node_processes_max_threads) * 100 > 85
+    for: 1m
+    labels:
+      serverity: warning
+    annotations: 
+      description: "The Percent of Threads Used is over 85%"
+  - alert: pred_run_procs
+    expr: predict_linear(node_procs_running[1h], 3600) > 10
+    for: 2m
+    labels:
+      serverity: warning
+    annotations:
+      description: "Number of running processes will over 10 in next 1h"
+  - alert: pred_block_procs
+    expr: predict_linear(node_procs_blocked[1h], 3600) > 5
+    for: 2m
+    labels:
+      serverity: warning
+    annotations:
+      description: "Number of blocked processes will over 5 in next 1h"
